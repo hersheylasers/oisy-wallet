@@ -101,7 +101,7 @@
 					</NavigationItem>
 				</div>
 				<div class="flex flex-col items-center justify-center">
-					<NavigationItem href="/send" ariaLabel="Send/Receive">
+					<NavigationItem href="/contacts" ariaLabel="Send/Receive">
 						<div class="mb-1 h-6 w-6">
 							<IconSend />
 						</div>

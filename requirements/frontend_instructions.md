@@ -2,17 +2,18 @@
 
 -Use this guide to modify and add pages the oisy wallet application frontend, which is a Internet Computer Protocol application which allows a user to self custody crypto on the Ethereum or Bitcoin blockchains. Use my designs as a guide for how the front end should look and stick to the theme established in the current implimentation.
 
-+ 1. The frontend is built with Svelte and TypeScript
+- 1. The frontend is built with Svelte and TypeScript
 
-+ 2. Main application code is organized under src/frontend/src/
+- 2. Main application code is organized under src/frontend/src/
 
-+ 3. Modular structure with separate sections for different cryptocurrencies (btc, eth, icp)
+- 3. Modular structure with separate sections for different cryptocurrencies (btc, eth, icp)
 
-+ 4. Route handling using SvelteKit's file-based routing system
+- 4. Route handling using SvelteKit's file-based routing system
 
-+ 5. Static assets are properly organized under the static directory
+- 5. Static assets are properly organized under the static directory
 
-+ 6. Configuration files at the root level for various tools (TypeScript, Vite, Tailwind, etc.)
+- 6. Configuration files at the root level for various tools (TypeScript, Vite, Tailwind, etc.)
+
 # Feature requirements
 
 - 1. Take an mobile first design approach. This application should appear nicely as a PWA on a browser or mobile browser.
@@ -35,11 +36,13 @@
 
 - 10. When I click on an account, I have a page showing the type of account, balance information, Actions ribbon for things like send, receive, deposit, withdraw, view statements. Then I have upcoming and recent transactions listed below. Each account type might have different special options. A Savings account has the 'Stake' option. Investment account has 'DeFi' option.
 
+- 11. The contacts page imports contacts from a user device (phone) and shows the people in a list. There is a user flow to add or edit contacts. The contacts contain information like ETH and Bitcoin addresses, along with network, so the value can be sent to the right one.
 
 # Relevant docs
 
 requirements/oisy mobile screenshot.png
 requirements/images_of_frontend_designs.pdf
+
 # Oisy Wallet Project Structure
 
 ```
