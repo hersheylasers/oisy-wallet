@@ -69,6 +69,8 @@
 		"buffer": "^6.0.3",
 		"ethers": "^5.7.0",
 		"idb-keyval": "^6.2.1",
+		"lucide": "^0.453.0",
+		"lucide-svelte": "^0.453.0",
 		"zod": "^3.23.8"
 	},
 	"devDependencies": {

@@ -15,7 +15,8 @@
 		{
 			type: 'Checking',
 			balance: '$1,234.56',
-			description: 'Main Account'
+			description: 'Main Account',
+			href: '/accounts/checking'
 		},
 		{
 			type: 'Savings',
@@ -63,7 +64,7 @@
 	<!-- Account Cards -->
 	<main class="flex-1 space-y-4 p-4 pb-24" in:fade>
 		{#each accounts as account}
-			<div class="transform cursor-pointer transition-all hover:scale-[1.02]">
+			<a href={account.href || '#'} class="block transform transition-all hover:scale-[1.02]">
 				<div class={`rounded-xl p-6 text-white shadow-lg ${getCardColor(account.type)}`}>
 					<div class="mb-8 flex items-start justify-between">
 						<div>
@@ -73,7 +74,7 @@
 					</div>
 					<div class="text-2xl font-bold">{account.balance}</div>
 				</div>
-			</div>
+			</a>
 		{/each}
 
 		<!-- Add Account Card -->
