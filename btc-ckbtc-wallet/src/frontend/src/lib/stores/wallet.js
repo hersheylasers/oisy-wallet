@@ -1,11 +1,12 @@
 import { writable } from 'svelte/store';
 import { canisterIds, getActor } from '../api';
+import { idlFactory } from '../wallet.did';
 import { authStore } from './auth';
 
 function createWalletStore() {
 	const { subscribe, set, update } = writable({
 		preferredNetwork: { Bitcoin: null },
-		balances: { btc: 0n, ckbtc: 0n },
+		balances: { btc: BigInt(0), ckbtc: BigInt(0) },
 		conversionHistory: [],
 		isLoading: false,
 		error: null
@@ -16,24 +17,24 @@ function createWalletStore() {
 		store = value;
 	});
 
-	return {
+	async function getWalletActor() {
+		return await getActor(canisterIds.walletBackend, idlFactory);
+	}
+
+	const walletStore = {
 		subscribe,
-		init: async () => {
-			try {
-				await Promise.all([refreshBalances(), refreshHistory()]);
-			} catch (error) {
-				console.error('Wallet init error:', error);
-				update((state) => ({ ...state, error: error.message }));
-			}
-		},
 		refreshBalances: async () => {
+			if (!store) return;
 			update((state) => ({ ...state, isLoading: true }));
 			try {
-				const actor = await getActor(canisterIds.walletBackend /* TODO: add wallet IDL */);
+				const actor = await getWalletActor();
 				const balances = await actor.get_balances();
 				update((state) => ({
 					...state,
-					balances,
+					balances: {
+						btc: BigInt(balances.btc.toString()),
+						ckbtc: BigInt(balances.ckbtc.toString())
+					},
 					isLoading: false
 				}));
 			} catch (error) {
@@ -46,9 +47,10 @@ function createWalletStore() {
 			}
 		},
 		refreshHistory: async () => {
+			if (!store) return;
 			update((state) => ({ ...state, isLoading: true }));
 			try {
-				const actor = await getActor(canisterIds.walletBackend /* TODO: add wallet IDL */);
+				const actor = await getWalletActor();
 				const history = await actor.get_conversion_history();
 				update((state) => ({
 					...state,
@@ -65,9 +67,10 @@ function createWalletStore() {
 			}
 		},
 		setPreferredNetwork: async (network) => {
+			if (!store) return;
 			update((state) => ({ ...state, isLoading: true }));
 			try {
-				const actor = await getActor(canisterIds.walletBackend /* TODO: add wallet IDL */);
+				const actor = await getWalletActor();
 				await actor.set_preferred_network(network);
 				update((state) => ({
 					...state,
@@ -85,13 +88,16 @@ function createWalletStore() {
 		},
 		clearError: () => update((state) => ({ ...state, error: null }))
 	};
+
+	return walletStore;
 }
 
 export const walletStore = createWalletStore();
 
-// Subscribe to auth changes to initialize wallet when authenticated
+// Initialize wallet when authenticated
 authStore.subscribe(async (authState) => {
 	if (authState.isAuthenticated) {
-		await walletStore.init();
+		await walletStore.refreshBalances();
+		await walletStore.refreshHistory();
 	}
 });

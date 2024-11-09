@@ -7,8 +7,11 @@
 	$: ({ balances, isLoading, error } = $walletStore);
 
 	onMount(() => {
+		// Initial refresh
+		walletStore.refreshBalances();
+
 		// Refresh balances every 30 seconds
-		refreshInterval = window.setInterval(() => {
+		refreshInterval = setInterval(() => {
 			walletStore.refreshBalances();
 		}, 30000);
 
@@ -20,6 +23,7 @@
 	});
 
 	function formatBalance(balance) {
+		if (!balance) return '0.00000000';
 		return (Number(balance) / 100_000_000).toFixed(8);
 	}
 </script>
@@ -29,7 +33,8 @@
 
 	{#if isLoading}
 		<div class="py-4 text-center">
-			<span class="text-gray-500">Loading balances...</span>
+			<div class="border-blue-600 mx-auto h-8 w-8 animate-spin rounded-full border-b-2"></div>
+			<span class="text-gray-500 mt-2 block">Loading balances...</span>
 		</div>
 	{:else if error}
 		<div class="text-red-600 bg-red-50 rounded-lg p-4">
@@ -60,6 +65,10 @@
 		on:click={() => walletStore.refreshBalances()}
 		disabled={isLoading}
 	>
-		Refresh Balances
+		{#if isLoading}
+			Refreshing...
+		{:else}
+			Refresh Balances
+		{/if}
 	</button>
 </div>

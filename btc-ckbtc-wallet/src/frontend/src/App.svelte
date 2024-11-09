@@ -7,19 +7,14 @@
 </script>
 
 <AuthGuard>
-	<main class="container mx-auto p-4">
+	<main class="bg-gray-50 min-h-screen">
 		<WalletHeader />
-		<div class="mt-6 grid grid-cols-1 gap-6">
-			<NetworkPreference />
-			<BalanceDisplay />
-			<ConversionHistory />
+		<div class="container mx-auto px-4 py-8">
+			<div class="grid grid-cols-1 gap-6">
+				<NetworkPreference />
+				<BalanceDisplay />
+				<ConversionHistory />
+			</div>
 		</div>
 	</main>
 </AuthGuard>
-
-<style>
-	:global(body) {
-		background-color: #f9fafb;
-		color: #111827;
-	}
-</style>

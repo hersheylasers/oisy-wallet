@@ -2,21 +2,16 @@
 	import { onMount } from 'svelte';
 	import { walletStore } from '../lib/stores/wallet';
 
-	let isLoading = false;
-
-	$: ({ preferredNetwork, error } = $walletStore);
+	$: ({ preferredNetwork, isLoading, error } = $walletStore);
 
 	async function handleNetworkChange(event) {
 		const select = event.target;
 		const network = select.value === 'Bitcoin' ? { Bitcoin: null } : { CkBTC: null };
 
 		try {
-			isLoading = true;
 			await walletStore.setPreferredNetwork(network);
 		} catch (err) {
 			console.error('Failed to update preference:', err);
-		} finally {
-			isLoading = false;
 		}
 	}
 
