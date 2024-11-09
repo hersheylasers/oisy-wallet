@@ -1,6 +1,8 @@
 import { AuthClient } from '@dfinity/auth-client';
 import { Principal } from '@dfinity/principal';
-import { writable } from 'svelte/store';
+import { get, writable } from 'svelte/store';
+
+const II_URL = import.meta.env.VITE_II_URL || 'https://identity.ic0.app';
 
 export interface AuthState {
 	isAuthenticated: boolean;
@@ -52,7 +54,7 @@ function createAuthStore() {
 
 				await new Promise<void>((resolve, reject) => {
 					client.login({
-						identityProvider: process.env.II_URL || 'https://identity.ic0.app',
+						identityProvider: II_URL,
 						onSuccess: () => resolve(),
 						onError: reject
 					});
@@ -83,9 +85,9 @@ function createAuthStore() {
 			update((state) => ({ ...state, isLoading: true, error: null }));
 
 			try {
-				const { client } = get(authStore);
-				if (client) {
-					await client.logout();
+				const store = get(authStore);
+				if (store.client) {
+					await store.client.logout();
 				}
 
 				set({

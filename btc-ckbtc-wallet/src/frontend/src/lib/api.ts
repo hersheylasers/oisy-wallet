@@ -1,8 +1,11 @@
-import { Actor, HttpAgent } from '@dfinity/agent';
+import { Actor, ActorSubclass, HttpAgent } from '@dfinity/agent';
+import type {
+	ConversionRecord as BackendConversionRecord,
+	_SERVICE
+} from '../../../declarations/wallet_backend/index';
 import { idlFactory } from '../../../declarations/wallet_backend/wallet_backend.did';
-import type { _SERVICE } from '../../../declarations/wallet_backend/wallet_backend.did.d';
 
-export type PreferredNetwork = 'Bitcoin' | 'CkBTC';
+export type PreferredNetwork = { Bitcoin: null } | { CkBTC: null };
 
 export interface Balances {
 	btc: bigint;
@@ -17,8 +20,18 @@ export interface ConversionRecord {
 	status: { Pending: null } | { Complete: null } | { Failed: string };
 }
 
+function convertRecord(record: BackendConversionRecord): ConversionRecord {
+	return {
+		timestamp: record.timestamp,
+		fromNetwork: record.from_network,
+		toNetwork: record.to_network,
+		amount: record.amount,
+		status: record.status
+	};
+}
+
 class WalletApi {
-	private actor: Actor;
+	private actor: ActorSubclass<_SERVICE>;
 
 	constructor(canisterId: string, agent: HttpAgent) {
 		this.actor = Actor.createActor<_SERVICE>(idlFactory, {
@@ -28,15 +41,14 @@ class WalletApi {
 	}
 
 	async setNetworkPreference(network: PreferredNetwork): Promise<void> {
-		const result = await this.actor.set_network_preference({ [network]: null });
+		const result = await this.actor.set_network_preference(network);
 		if ('Err' in result) {
 			throw new Error(result.Err);
 		}
 	}
 
 	async getNetworkPreference(): Promise<PreferredNetwork> {
-		const result = await this.actor.get_network_preference();
-		return Object.keys(result)[0] as PreferredNetwork;
+		return await this.actor.get_network_preference();
 	}
 
 	async getBalances(): Promise<Balances> {
@@ -55,7 +67,8 @@ class WalletApi {
 	}
 
 	async getConversionHistory(): Promise<ConversionRecord[]> {
-		return await this.actor.get_conversion_history();
+		const records = await this.actor.get_conversion_history();
+		return records.map(convertRecord);
 	}
 }
 

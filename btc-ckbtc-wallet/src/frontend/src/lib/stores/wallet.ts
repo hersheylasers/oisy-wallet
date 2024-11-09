@@ -12,7 +12,7 @@ export interface WalletState {
 
 function createWalletStore() {
 	const { subscribe, set, update } = writable<WalletState>({
-		preferredNetwork: 'Bitcoin',
+		preferredNetwork: { Bitcoin: null },
 		balances: { btc: 0n, ckbtc: 0n },
 		conversionHistory: [],
 		isLoading: false,

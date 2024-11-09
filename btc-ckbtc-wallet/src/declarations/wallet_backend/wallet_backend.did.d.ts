@@ -1,10 +1,7 @@
-import type { ActorMethod } from '@dfinity/agent';
+import type { IDL } from '@dfinity/candid';
 
-export interface Balances {
-	btc: bigint;
-	ckbtc: bigint;
-}
-export type BalanceResult = { Ok: Balances } | { Err: string };
+export type PreferredNetwork = { Bitcoin: null } | { CkBTC: null };
+export type ConversionStatus = { Pending: null } | { Complete: null } | { Failed: string };
 export interface ConversionRecord {
 	timestamp: bigint;
 	from_network: PreferredNetwork;
@@ -12,14 +9,13 @@ export interface ConversionRecord {
 	amount: bigint;
 	status: ConversionStatus;
 }
-export type ConversionStatus = { Pending: null } | { Complete: null } | { Failed: string };
-export type PreferredNetwork = { Bitcoin: null } | { CkBTC: null };
-export type Result = { Ok: null } | { Err: string };
 
 export interface _SERVICE {
-	set_network_preference: ActorMethod<[PreferredNetwork], Result>;
-	get_network_preference: ActorMethod<[], PreferredNetwork>;
-	get_balances: ActorMethod<[], BalanceResult>;
-	check_and_convert: ActorMethod<[], Result>;
-	get_conversion_history: ActorMethod<[], Array<ConversionRecord>>;
+	set_network_preference: (arg_0: PreferredNetwork) => Promise<{ Ok: null } | { Err: string }>;
+	get_network_preference: () => Promise<PreferredNetwork>;
+	get_balances: () => Promise<{ Ok: { btc: bigint; ckbtc: bigint } } | { Err: string }>;
+	check_and_convert: () => Promise<{ Ok: null } | { Err: string }>;
+	get_conversion_history: () => Promise<Array<ConversionRecord>>;
 }
+
+export declare const idlFactory: IDL.InterfaceFactory;

@@ -1,0 +1,140 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  RUST_VERSION: 1.70.0
+  NODE_VERSION: 18
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run TypeScript checks
+        run: npm run check
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Run tests
+        run: npm run test
+
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ env.RUST_VERSION }}
+          override: true
+          components: rustfmt, clippy
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Run clippy
+        run: cargo clippy -- -D warnings
+
+      - name: Run tests
+        run: cargo test
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Install DFX
+        run: |
+          wget https://internetcomputer.org/install.sh
+          bash install.sh
+          echo "$HOME/bin" >> $GITHUB_PATH
+
+      - name: Start local replica
+        run: dfx start --background
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+
+  deploy-preview:
+    if: github.event_name == 'pull_request'
+    needs: [check, rust, e2e]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build:prod
+
+      # Add steps to deploy to a preview environment if needed
+
+  deploy-production:
+    if: github.ref == 'refs/heads/main'
+    needs: [check, rust, e2e]
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install DFX
+        run: |
+          wget https://internetcomputer.org/install.sh
+          bash install.sh
+          echo "$HOME/bin" >> $GITHUB_PATH
+
+      - name: Deploy to IC
+        env:
+          DFX_IDENTITY: ${{ secrets.DFX_IDENTITY }}
+        run: |
+          echo "$DFX_IDENTITY" > identity.pem
+          dfx identity import production identity.pem
+          dfx identity use production
+          npm run deploy:prod
+          rm identity.pem
