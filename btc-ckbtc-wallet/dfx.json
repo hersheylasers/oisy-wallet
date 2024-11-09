@@ -1,0 +1,35 @@
+{
+	"canisters": {
+		"btc_ckbtc_wallet": {
+			"type": "rust",
+			"package": "btc_ckbtc_wallet",
+			"candid": "src/backend/wallet_backend.did"
+		},
+		"frontend": {
+			"dependencies": ["btc_ckbtc_wallet"],
+			"frontend": {
+				"entrypoint": "src/frontend/src/index.html"
+			},
+			"source": ["src/frontend/dist"],
+			"type": "assets"
+		}
+	},
+	"defaults": {
+		"bitcoin": {
+			"enabled": true,
+			"nodes": ["127.0.0.1:18444"],
+			"log_level": "info"
+		},
+		"build": {
+			"args": "",
+			"packtool": ""
+		}
+	},
+	"networks": {
+		"local": {
+			"bind": "127.0.0.1:8000",
+			"type": "ephemeral"
+		}
+	},
+	"version": 1
+}

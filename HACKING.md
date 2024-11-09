@@ -216,7 +216,7 @@ To start testing Bitcoin feature you'll need some tokens.
 For that, you can get the address of your test user from the UI and get yourlsef some bitcoins:
 
 ```bash
-./scripts/add.tokens.bitcoin.sh --amount <amount-in-blocks> --address <test-user-address>
+./scripts/add.tokens.bitcoin.sh --amount 50 --address bcrt1q85lmpx64lk2luzqtdeazw7t3c5mw94mwaj7lta
 ```
 
 **One block equals 50 Bitcoin.**

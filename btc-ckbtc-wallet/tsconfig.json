@@ -1,0 +1,30 @@
+{
+	"compilerOptions": {
+		"moduleResolution": "node",
+		"target": "ESNext",
+		"module": "ESNext",
+		"lib": ["ESNext", "DOM", "DOM.Iterable"],
+		"skipLibCheck": true,
+		"allowJs": true,
+		"checkJs": true,
+		"isolatedModules": true,
+		"sourceMap": true,
+		"esModuleInterop": true,
+		"resolveJsonModule": true,
+		"strict": true,
+		"baseUrl": ".",
+		"paths": {
+			"$lib/*": ["src/frontend/src/lib/*"],
+			"$components/*": ["src/frontend/src/components/*"]
+		},
+		"types": ["svelte", "vite/client"]
+	},
+	"include": [
+		"src/frontend/src/**/*.ts",
+		"src/frontend/src/**/*.js",
+		"src/frontend/src/**/*.svelte",
+		"src/declarations/**/*.ts",
+		"src/declarations/**/*.js"
+	],
+	"exclude": ["node_modules/*"]
+}

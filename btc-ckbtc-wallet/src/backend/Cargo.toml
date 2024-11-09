@@ -1,0 +1,22 @@
+[package]
+name = "btc_ckbtc_wallet"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+candid = "0.9.9"
+ic-cdk = "0.11.1"
+ic-cdk-macros = "0.8.1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+bitcoin = { version = "0.30.0", features = ["rand"] }
+ic-btc-interface = "0.1.1"
+ic-ckbtc-minter = "1.0.0"
+hex = "0.4.3"
+sha2 = "0.10.7"
+
+[dev-dependencies]
+tokio = { version = "1.0", features = ["full"] }

@@ -1,0 +1,37 @@
+type PreferredNetwork = variant {
+    Bitcoin;
+    CkBTC;
+};
+
+type UserPreferences = record {
+    preferred_network: PreferredNetwork;
+    auto_convert: bool;
+    min_amount: nat64;
+};
+
+type ConversionStatus = variant {
+    Pending;
+    Complete;
+    Failed: text;
+};
+
+type ConversionRecord = record {
+    timestamp: nat64;
+    from_network: PreferredNetwork;
+    to_network: PreferredNetwork;
+    amount: nat64;
+    status: ConversionStatus;
+};
+
+service : (opt principal) -> {
+    // Network preference management
+    set_network_preference: (PreferredNetwork) -> (variant { Ok; Err: text });
+    get_network_preference: () -> (PreferredNetwork) query;
+    
+    // Balance and conversion operations
+    get_balances: () -> (variant { Ok: record { btc: nat64; ckbtc: nat64 }; Err: text });
+    check_and_convert: () -> (variant { Ok; Err: text });
+    
+    // History
+    get_conversion_history: () -> (vec ConversionRecord) query;
+};
