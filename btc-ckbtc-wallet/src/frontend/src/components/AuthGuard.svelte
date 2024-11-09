@@ -1,20 +1,25 @@
-<script lang="ts">
+<script>
 	import { onMount } from 'svelte';
-	import { authStore } from '$lib/stores/auth';
+	import { authStore } from '../lib/stores/auth';
 
 	let isLoading = true;
 
 	$: ({ isAuthenticated, error } = $authStore);
 
 	onMount(async () => {
-		const isAuthed = await authStore.init();
-		if (!isAuthed) {
-			await authStore.login();
+		try {
+			console.log('Initializing auth...');
+			const isAuthed = await authStore.init();
+			console.log('Auth initialized, isAuthed:', isAuthed);
+			isLoading = false;
+		} catch (err) {
+			console.error('Auth initialization error:', err);
+			isLoading = false;
 		}
-		isLoading = false;
 	});
 
 	async function handleLogin() {
+		console.log('Login clicked');
 		await authStore.login();
 	}
 </script>

@@ -1,27 +1,25 @@
-<script context="module" lang="ts">
-	export {};
-</script>
+<script>
+	import { onMount } from 'svelte';
+	import { walletStore } from '../lib/stores/wallet';
 
-<script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
-	import { walletStore } from '$lib/stores/wallet';
-
-	let refreshInterval: number;
+	let refreshInterval;
 
 	$: ({ balances, isLoading, error } = $walletStore);
 
 	onMount(() => {
 		// Refresh balances every 30 seconds
-		refreshInterval = setInterval(() => {
+		refreshInterval = window.setInterval(() => {
 			walletStore.refreshBalances();
 		}, 30000);
 
 		return () => {
-			clearInterval(refreshInterval);
+			if (refreshInterval) {
+				clearInterval(refreshInterval);
+			}
 		};
 	});
 
-	function formatBalance(balance: bigint): string {
+	function formatBalance(balance) {
 		return (Number(balance) / 100_000_000).toFixed(8);
 	}
 </script>

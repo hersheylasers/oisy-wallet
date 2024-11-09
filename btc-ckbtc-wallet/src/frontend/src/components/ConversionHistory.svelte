@@ -1,26 +1,28 @@
-<script context="module" lang="ts">
-	export {};
-</script>
-
-<script lang="ts">
+<script>
 	import { onMount } from 'svelte';
-	import { walletStore } from '$lib/stores/wallet';
-	import type { ConversionRecord } from '$lib/api';
+	import { walletStore } from '../lib/stores/wallet';
 
 	$: ({ conversionHistory, isLoading, error } = $walletStore);
 
-	function formatDate(timestamp: bigint): string {
+	function formatDate(timestamp) {
 		return new Date(Number(timestamp)).toLocaleString();
 	}
 
-	function getStatusColor(status: ConversionRecord['status']): string {
+	function formatAmount(record) {
+		const amount = Number(record.amount) / 100_000_000;
+		const fromNetwork = Object.keys(record.fromNetwork)[0];
+		const toNetwork = Object.keys(record.toNetwork)[0];
+		return `${amount.toFixed(8)} ${fromNetwork} → ${toNetwork}`;
+	}
+
+	function getStatusColor(status) {
 		if ('Pending' in status) return 'text-yellow-600 bg-yellow-100';
 		if ('Complete' in status) return 'text-green-600 bg-green-100';
 		if ('Failed' in status) return 'text-red-600 bg-red-100';
 		return 'text-gray-600 bg-gray-100';
 	}
 
-	function getStatusText(status: ConversionRecord['status']): string {
+	function getStatusText(status) {
 		if ('Pending' in status) return 'Pending';
 		if ('Complete' in status) return 'Complete';
 		if ('Failed' in status) return `Failed: ${status.Failed}`;
@@ -60,11 +62,7 @@
 					<div class="flex items-start justify-between">
 						<div>
 							<p class="text-gray-500 text-sm">{formatDate(conversion.timestamp)}</p>
-							<p class="mt-1">
-								{Number(conversion.amount) / 100_000_000}
-								{Object.keys(conversion.fromNetwork)[0]} →
-								{Object.keys(conversion.toNetwork)[0]}
-							</p>
+							<p class="mt-1">{formatAmount(conversion)}</p>
 						</div>
 						<span class={`rounded-full px-2 py-1 text-sm ${getStatusColor(conversion.status)}`}>
 							{getStatusText(conversion.status)}

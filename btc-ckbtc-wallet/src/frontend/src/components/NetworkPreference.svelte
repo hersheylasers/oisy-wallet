@@ -1,13 +1,15 @@
-<script lang="ts">
+<script>
 	import { onMount } from 'svelte';
-	import { walletStore } from '$lib/stores/wallet';
-	import type { PreferredNetwork } from '$lib/api';
+	import { walletStore } from '../lib/stores/wallet';
 
 	let isLoading = false;
 
 	$: ({ preferredNetwork, error } = $walletStore);
 
-	async function updatePreference(network: PreferredNetwork) {
+	async function handleNetworkChange(event) {
+		const select = event.target;
+		const network = select.value === 'Bitcoin' ? { Bitcoin: null } : { CkBTC: null };
+
 		try {
 			isLoading = true;
 			await walletStore.setPreferredNetwork(network);
@@ -28,9 +30,13 @@
 
 	<div class="space-y-4">
 		<div>
-			<label class="text-gray-700 block text-sm font-medium">Preferred Network</label>
+			<label for="network-select" class="text-gray-700 block text-sm font-medium">
+				Preferred Network
+			</label>
 			<select
-				bind:value={preferredNetwork}
+				id="network-select"
+				value={Object.keys(preferredNetwork)[0]}
+				on:change={handleNetworkChange}
 				class="border-gray-300 focus:border-blue-500 focus:ring-blue-500 mt-1 block w-full rounded-md shadow-sm"
 				disabled={isLoading}
 			>

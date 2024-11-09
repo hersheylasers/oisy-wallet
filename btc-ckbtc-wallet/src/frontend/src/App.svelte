@@ -1,4 +1,4 @@
-<script lang="ts">
+<script>
 	import AuthGuard from './components/AuthGuard.svelte';
 	import NetworkPreference from './components/NetworkPreference.svelte';
 	import BalanceDisplay from './components/BalanceDisplay.svelte';
@@ -9,7 +9,6 @@
 <AuthGuard>
 	<main class="container mx-auto p-4">
 		<WalletHeader />
-
 		<div class="mt-6 grid grid-cols-1 gap-6">
 			<NetworkPreference />
 			<BalanceDisplay />

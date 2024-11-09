@@ -1,32 +1,11 @@
 {
 	"name": "btc-ckbtc-wallet",
 	"version": "0.1.0",
-	"description": "A wallet for automatic BTC-ckBTC conversion",
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
 		"build": "vite build",
-		"serve": "vite preview",
-		"check": "svelte-check --tsconfig ./tsconfig.json",
-		"lint": "eslint . --ext .ts,.svelte",
-		"format": "prettier --write .",
-		"test": "vitest",
-		"test:e2e": "playwright test",
-		"dfx:start": "dfx start --clean --background",
-		"dfx:stop": "dfx stop",
-		"dfx:deploy": "dfx deploy",
-		"dfx:deploy:local": "dfx deploy --network=local",
-		"dfx:deploy:ic": "dfx deploy --network=ic",
-		"dfx:generate": "dfx generate",
-		"ii:deploy": "dfx deploy internet_identity",
-		"ckbtc:deploy": "dfx deploy ckbtc_minter",
-		"clean": "rm -rf .dfx dist node_modules .svelte-kit",
-		"clean:dfx": "rm -rf .dfx",
-		"clean:deps": "rm -rf node_modules",
-		"setup": "npm install && dfx start --clean --background && npm run ii:deploy && npm run dfx:deploy:local",
-		"start": "run-p dev dfx:deploy:local",
-		"build:prod": "npm run clean && npm install && npm run dfx:generate && npm run build",
-		"deploy:prod": "npm run build:prod && npm run dfx:deploy:ic"
+		"preview": "vite preview"
 	},
 	"dependencies": {
 		"@dfinity/agent": "^0.19.2",
@@ -37,25 +16,12 @@
 		"svelte": "^4.0.0"
 	},
 	"devDependencies": {
-		"@playwright/test": "^1.35.0",
+		"@sveltejs/adapter-static": "^2.0.2",
+		"@sveltejs/kit": "^1.20.4",
 		"@sveltejs/vite-plugin-svelte": "^2.4.2",
-		"@tsconfig/svelte": "^5.0.0",
-		"@types/node": "^20.4.2",
-		"@typescript-eslint/eslint-plugin": "^6.0.0",
-		"@typescript-eslint/parser": "^6.0.0",
 		"autoprefixer": "^10.4.14",
-		"eslint": "^8.44.0",
-		"eslint-config-prettier": "^8.8.0",
-		"eslint-plugin-svelte": "^2.32.2",
-		"npm-run-all": "^4.1.5",
 		"postcss": "^8.4.24",
-		"prettier": "^3.0.0",
-		"prettier-plugin-svelte": "^2.10.1",
-		"svelte-check": "^3.4.6",
-		"svelte-preprocess": "^5.0.4",
 		"tailwindcss": "^3.3.2",
-		"typescript": "^5.0.0",
-		"vite": "^4.4.0",
-		"vitest": "^0.33.0"
+		"vite": "^4.4.0"
 	}
 }
