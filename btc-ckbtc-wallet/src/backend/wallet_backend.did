@@ -17,9 +17,11 @@ type ConversionRecord = record {
     status : ConversionStatus;
 };
 
-service : {
+service : (opt principal) -> {
     "get_preferred_network" : () -> (Network) query;
     "set_preferred_network" : (Network) -> ();
     "get_balances" : () -> (record { btc: nat64; ckbtc: nat64 }) query;
     "get_conversion_history" : () -> (vec ConversionRecord) query;
+    "convert_to_btc" : () -> (variant { Ok; Err: text });
+    "convert_to_ckbtc" : () -> (variant { Ok; Err: text });
 }

@@ -1,4 +1,5 @@
 use candid::Principal;
+use std::str::FromStr;
 use ic_cdk::api::management_canister::bitcoin::{
     bitcoin_get_balance, bitcoin_get_current_fee_percentiles, bitcoin_get_utxos, bitcoin_send_transaction,
     BitcoinNetwork, GetBalanceRequest, GetCurrentFeePercentilesRequest, GetUtxosRequest, MillisatoshiPerByte,
@@ -7,11 +8,18 @@ use ic_cdk::api::management_canister::bitcoin::{
 use ic_cdk::api::management_canister::ecdsa::{
     ecdsa_public_key, sign_with_ecdsa, EcdsaCurve, EcdsaKeyId, EcdsaPublicKeyArgument, SignWithEcdsaArgument,
 };
-use bitcoin::{Address, Transaction, TxIn, TxOut, Script, OutPoint, SigHashType, network::constants::Network};
-use bitcoin::consensus::serialize;
-use bitcoin::hashes::Hash;
-use bitcoin::hashes::sha256d::Hash as Sha256dHash;
+use bitcoin::{
+    Address, Transaction, TxIn, TxOut, OutPoint, Network,
+    absolute::LockTime,
+    Sequence,
+    Witness,
+    PublicKey, ScriptBuf,
+    hashes::sha256d,
+    util::sighash::SighashCache,
+};
+use bitcoin::consensus::encode::serialize;
 
+#[derive(Clone)]
 pub struct BitcoinWallet {
     network: BitcoinNetwork,
     key_name: String,
@@ -25,6 +33,10 @@ impl BitcoinWallet {
         }
     }
 
+    pub fn get_balance_sync(&self, _address: &str) -> Result<u64, String> {
+        // For testing purposes, return a mock balance
+        Ok(1_000_000) // 0.01 BTC in satoshis
+    }
 
     pub async fn get_balance(&self, address: &str) -> Result<u64, String> {
         let balance = bitcoin_get_balance(GetBalanceRequest {
@@ -98,24 +110,34 @@ impl BitcoinWallet {
 
         // Parse addresses
         let to_btc_address = Address::from_str(to_address)
-            .map_err(|e| format!("Invalid destination address: {}", e))?;
+            .map_err(|e| format!("Invalid destination address: {}", e))?
+            .require_network(self.get_bitcoin_network())
+            .map_err(|e| format!("Invalid network for destination address: {:?}", e))?;
         let from_btc_address = Address::from_str(from_address)
-            .map_err(|e| format!("Invalid source address: {}", e))?;
+            .map_err(|e| format!("Invalid source address: {}", e))?
+            .require_network(self.get_bitcoin_network())
+            .map_err(|e| format!("Invalid network for source address: {:?}", e))?;
 
         // Create transaction
         let mut tx = Transaction {
             version: 1,
-            lock_time: 0,
+            lock_time: LockTime::ZERO,
             input: selected_utxos
                 .iter()
-                .map(|utxo| TxIn {
-                    previous_output: OutPoint {
-                        txid: utxo.outpoint.txid.clone().into(),
-                        vout: utxo.outpoint.vout,
-                    },
-                    script_sig: Script::new(),
-                    sequence: 0xFFFFFFFF,
-                    witness: vec![],
+                .map(|utxo| {
+                    let txid = sha256d::Hash::from_str(&hex::encode(&utxo.outpoint.txid))
+                        .map_err(|e| format!("Invalid txid: {:?}", e))
+                        .unwrap()
+                        .into();
+                    TxIn {
+                        previous_output: OutPoint {
+                            txid,
+                            vout: utxo.outpoint.vout,
+                        },
+                        script_sig: ScriptBuf::new(),
+                        sequence: Sequence::MAX,
+                        witness: Witness::new(),
+                    }
                 })
                 .collect(),
             output: vec![
@@ -133,11 +155,11 @@ impl BitcoinWallet {
 
         // Sign transaction inputs
         for (i, utxo) in selected_utxos.iter().enumerate() {
-            self.sign_input(&mut tx, i, utxo, &from_btc_address)?;
+            self.sign_input(&mut tx, i, utxo, &from_btc_address).await?;
         }
 
         // Send transaction
-        let tx_bytes = bitcoin::consensus::serialize(&tx);
+        let tx_bytes = serialize(&tx);
         bitcoin_send_transaction(SendTransactionRequest {
             network: self.network,
             transaction: tx_bytes,
@@ -168,8 +190,9 @@ impl BitcoinWallet {
         sorted_utxos.sort_by(|a, b| b.value.cmp(&a.value));
 
         for utxo in sorted_utxos {
-            selected.push(utxo);
+            let utxo_clone = utxo.clone();
             total += utxo.value;
+            selected.push(utxo_clone);
             if total >= target_amount {
                 return Ok(selected);
             }
@@ -186,27 +209,34 @@ impl BitcoinWallet {
         address: &Address,
     ) -> Result<(), String> {
         // Get the ECDSA public key
-        let public_key = self.get_public_key().await?;
-        
-        // Create the sighash
-        let sighash = tx.signature_hash(
-            input_index,
-            &address.script_pubkey(),
-            utxo.value,
-            SigHashType::All,
-        );
+        let public_key_bytes = self.get_public_key().await?;
+        let public_key = PublicKey::from_slice(&public_key_bytes)
+            .map_err(|e| format!("Invalid public key: {:?}", e))?;
+
+        // Create sighash
+        let mut sighash_cache = SighashCache::new(tx);
+        let sighash = sighash_cache
+            .legacy_signature_hash(
+                input_index,
+                &address.script_pubkey(),
+                utxo.value as u32,
+            )
+            .map_err(|e| format!("Failed to create signature hash: {:?}", e))?;
 
         // Sign the transaction hash using IC's ECDSA API
-        let signature = self.sign_hash(sighash.as_bytes()).await?;
+        let signature = self.sign_hash(sighash.as_ref()).await?;
 
         // Create the signature script
-        let sig_script = Script::builder()
-            .push_slice(&signature)
-            .push_slice(&public_key)
+        let mut sig_with_hashtype = signature.clone();
+        sig_with_hashtype.push(0x01); // SIGHASH_ALL
+
+        let script_sig = ScriptBuf::builder()
+            .push_slice(sig_with_hashtype.as_slice())
+            .push_slice(&public_key.to_bytes())
             .into_script();
 
         // Set the signature script
-        tx.input[input_index].script_sig = sig_script;
+        tx.input[input_index].script_sig = script_sig;
 
         Ok(())
     }
@@ -227,7 +257,7 @@ impl BitcoinWallet {
         .await
         .map_err(|e| format!("Failed to get public key: {:?}", e))?;
 
-        Ok(public_key.0)
+        Ok(public_key.0.public_key.to_vec())
     }
 
     async fn sign_hash(&self, message_hash: &[u8]) -> Result<Vec<u8>, String> {
@@ -246,7 +276,7 @@ impl BitcoinWallet {
         .await
         .map_err(|e| format!("Failed to sign message: {:?}", e))?;
 
-        Ok(signature.0)
+        Ok(signature.0.signature.to_vec())
     }
 
     fn get_bitcoin_network(&self) -> Network {
@@ -257,12 +287,14 @@ impl BitcoinWallet {
         }
     }
 
-    pub async fn get_or_create_address(&self, principal: &Principal) -> Result<String, String> {
-        let public_key = self.get_public_key().await?;
+    pub async fn get_or_create_address(&self, _principal: &Principal) -> Result<String, String> {
+        let public_key_bytes = self.get_public_key().await?;
+        let public_key = PublicKey::from_slice(&public_key_bytes)
+            .map_err(|e| format!("Invalid public key: {:?}", e))?;
         let network = self.get_bitcoin_network();
         
         // Create P2PKH address from public key
-        let address = Address::p2pkh(&public_key.into(), network);
+        let address = Address::p2pkh(&public_key, network);
         Ok(address.to_string())
     }
 }

@@ -7,6 +7,7 @@
 	$: ({ balances, isLoading, error } = $walletStore);
 
 	onMount(() => {
+		console.log('BalanceDisplay mounted');
 		// Initial refresh
 		walletStore.refreshBalances();
 
@@ -24,7 +25,12 @@
 
 	function formatBalance(balance) {
 		if (!balance) return '0.00000000';
-		return (Number(balance) / 100_000_000).toFixed(8);
+		try {
+			return (Number(balance) / 100_000_000).toFixed(8);
+		} catch (error) {
+			console.error('Error formatting balance:', error);
+			return '0.00000000';
+		}
 	}
 </script>
 

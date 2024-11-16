@@ -18,10 +18,15 @@ export const idlFactory = ({ IDL }) => {
 		status: ConversionStatus
 	});
 
+	const Result = IDL.Variant({
+		Ok: IDL.Tuple(IDL.Nat64, IDL.Nat64),
+		Err: IDL.Text
+	});
+
 	return IDL.Service({
 		get_preferred_network: IDL.Func([], [Network], ['query']),
 		set_preferred_network: IDL.Func([Network], [], []),
-		get_balances: IDL.Func([], [IDL.Record({ btc: IDL.Nat64, ckbtc: IDL.Nat64 })], ['query']),
+		get_balances: IDL.Func([], [Result], ['query']),
 		get_conversion_history: IDL.Func([], [IDL.Vec(ConversionRecord)], ['query'])
 	});
 };

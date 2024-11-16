@@ -1,28 +1,38 @@
 use candid::{CandidType, Deserialize};
 
 #[derive(CandidType, Deserialize, Clone, Debug)]
-pub enum PreferredNetwork {
+pub enum Network {
     Bitcoin,
     CkBTC,
 }
 
 #[derive(CandidType, Deserialize)]
 pub struct UserPreferences {
-    pub preferred_network: PreferredNetwork,
+    pub preferred_network: Network,
     pub auto_convert: bool,
     pub min_amount: u64,
 }
 
-#[derive(CandidType, Deserialize)]
+impl Default for UserPreferences {
+    fn default() -> Self {
+        Self {
+            preferred_network: Network::Bitcoin,
+            auto_convert: false,
+            min_amount: 0,
+        }
+    }
+}
+
+#[derive(CandidType, Deserialize, Clone)]
 pub struct ConversionRecord {
     pub timestamp: u64,
-    pub from_network: PreferredNetwork,
-    pub to_network: PreferredNetwork,
+    pub from_network: Network,
+    pub to_network: Network,
     pub amount: u64,
     pub status: ConversionStatus,
 }
 
-#[derive(CandidType, Deserialize)]
+#[derive(CandidType, Deserialize, Clone)]
 pub enum ConversionStatus {
     Pending,
     Complete,

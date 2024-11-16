@@ -1,47 +1,20 @@
-# Dependencies
-node_modules
-.pnp
-.pnp.js
-
-# Testing
-coverage
-.nyc_output
-playwright-report
-test-results
-
-# Production
-dist
-build
-.svelte-kit
-
-# DFX
-.dfx
-canister_ids.json
-
-# Environment
-.env.local
-.env.*.local
-
-# IDEs and editors
-.idea
-.vscode
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Rust
+# Rust build artifacts
 target/
 **/*.rs.bk
 Cargo.lock
 
-# Local files
-*.local
-*.log
+# DFX artifacts
+.dfx/
+canister_ids.json
+
+# Node modules
+node_modules/
+dist/
+
+# IDE files
+.vscode/
+.idea/
+
+# Environment files
+.env
+.env.local
